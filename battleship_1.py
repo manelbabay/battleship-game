@@ -1,148 +1,131 @@
 # -----------------------------------------------------------------------------------------------------------------------------
-#                                                     Importation de la bibliothÃ¨que Numpy
+#                                                     Importing the NumPy library
 # -----------------------------------------------------------------------------------------------------------------------------
-# Nous avons choisi d'importer Numpy pour pouvoir manipuler notre grille sous forme de matrice en y stockant nos bateaux.
-# Mais aussi de pouvoir gÃ©nÃ©rer des nombres alÃ©atoires pour crÃ©er les bateaux de l'ordinateur
+# We chose to import NumPy to handle our grid as a matrix to store the ships,
+# and to generate random numbers for placing the computer's ships.
 
 import numpy as np
 
 # -----------------------------------------------------------------------------------------------------------------------------
-#                                             PrÃ©sentation des diffÃ©rentes fonctions que l'on va utiliser
+#                                             Overview of the functions we will use
 # -----------------------------------------------------------------------------------------------------------------------------
 
-
-def initialiserGrille (): 
-    # Comme son nom l'indique cette fonction va avoir pour but d'initialiser la grille de l'ordinateur. 
-    # Pour cela l'on va crÃ©e une matrice 10x10 coresppondant Ã  la taille de notre grille et la remplir de zÃ©ro.
-    A=np.zeros((10,10))
-    return A
+def initializeGrid(): 
+    # This function initializes the computer's grid as a 10x10 matrix filled with zeros.
+    grid = np.zeros((10,10))
+    return grid
 
   
-def afficherGrille(A):
-    # Cette fonction prend en argument une matrice dont elle va faire un affichage graphique sous forme de grille
-    print(" ",np.arange(1,11,1))      #affichage du nom des colonnes 
+def displayGrid(grid):
+    # This function displays a matrix as a grid with labels
+    print(" ", np.arange(1,11,1))  # Display column names
     for i in range(10):
-        print(chr(65+i),"|",end=' ')  #affichage du nom des lignes 
-        for j in range (10):
-            if A[i,j]==10:
-                print("*",end=' |')   #si c'est une case d'eau qui a Ã©tÃ© touchÃ© 
-            elif -5<=A[i,j]<0:
-                print("+",end=' |')   # si c'est une case d'un bateau qui a Ã©tÃ© touchÃ© 
-            elif A[i,j]<=-10:
-                print("x",end=' |')   # si c'est une case d'un bateau qui a Ã©tÃ© coulÃ©
+        print(chr(65+i), "|", end=' ')  # Display row letters (A to J)
+        for j in range(10):
+            if grid[i, j] == 10:
+                print("*", end=' |')  # Water that has been hit
+            elif -5 <= grid[i, j] < 0:
+                print("+", end=' |')  # Ship that has been hit
+            elif grid[i, j] <= -10:
+                print("x", end=' |')  # Ship that has been sunk
             else:
-                print(" ",end=' |')
+                print(" ", end=' |')  # Unplayed cell
         print(" ")
 
 
-
-
-def placerBateaux(A, n):
-    # Cette fonction prend en argument une matrice qui sera directement modifier en mÃ©moire et une taille de bateau et va chercher comment placer le bateau
-    bateau_place = False     # Introduction d'un boolÃ©en permettant la sortie de la boucle qu'on initialise Ã  Faux 
+def placeShips(grid, size):
+    # This function places a ship of a given size randomly on the grid
+    ship_placed = False
     
-    while bateau_place==False :  # RÃ©pÃ©ter jusqu'Ã  trouver une position valide
-        i = np.random.randint(0, 10)    # Position de dÃ©part alÃ©atoire (ligne)
-        j = np.random.randint(0, 10)    # Position de dÃ©part alÃ©atoire (colonne)
-        p = np.random.randint(0, 2)     # Choix alÃ©atoire entre placement horizontal (0) et vertical (1)
+    while not ship_placed:
+        i = np.random.randint(0, 10)  # Random row
+        j = np.random.randint(0, 10)  # Random column
+        orientation = np.random.randint(0, 2)  # 0: horizontal, 1: vertical
 
-        if p == 0:  # Placement horizontal
-            # 1ere condition: VÃ©rifie que le bateau tient dans la grille (j + n <= 10) 
-            # 2eme condition: pas d'autres bateaux sur les cases concernÃ©es avec le np.all pour Ã©viter le chevauchement 
-            if j + n <= 10 and np.all(A[i, j:j + n] == 0):
-                A[i, j:j + n] = n # Place le bateau en remplissant les cases avec sa taille, cela nous permet de savoir quelle bateau se trouve Ã  telle place
-                bateau_place = True
-            
-        else:  # Placement vertical
-            if i + n <= 10 and np.all(A[i:i + n, j] == 0): # De mÃªme
-                A[i:i + n, j] = n
-                bateau_place = True
+        if orientation == 0:  # Horizontal
+            if j + size <= 10 and np.all(grid[i, j:j + size] == 0):
+                grid[i, j:j + size] = size
+                ship_placed = True
+        else:  # Vertical
+            if i + size <= 10 and np.all(grid[i:i + size, j] == 0):
+                grid[i:i + size, j] = size
+                ship_placed = True
 
 
-
-def dejajoue(i, j, B):
-    # Cette fonction prend en argument une ligne, une colonne et la matrice et va tester si la case en question a dÃ©jÃ  Ã©tÃ© jouÃ© par le joueur  
-    if B[i, j] < 0 or B[i, j] == 10:  # Si la case a dÃ©jÃ  Ã©tÃ© touchÃ©e (bateau si inf Ã  0 ou eau si Ã©gal Ã  10)
-        return True    #  La case a dÃ©jÃ  Ã©tÃ© jouÃ© donc la fonction retourne Vrai
-    return False         #  La case n'a pas Ã©tÃ© jouÃ© donc retourne Faux
-
+def alreadyPlayed(i, j, grid):
+    # This function checks if a cell has already been played
+    if grid[i, j] < 0 or grid[i, j] == 10:
+        return True
+    return False
 
 
-def jouer(B, i, j,Nbr_bateau_coule):
-    # Cette fonction prend en argument une ligne, une colonne, la matrice et le nombre de bateaux coulÃ© 
-    # Elle va avoir pour objectif de changer la valeur de la case suivant ce qu'elle contenait originellement et ainsi la marquer comme jouÃ© 
-    # Comme c'est une matrice cela changera directement en mÃ©moire donc pas besoin de retourner la matrice 
-    valeur_bateau = B[i, j]   # Notation pour faciliter la comprÃ©hension 
-    if valeur_bateau != 0:  # Bateau touchÃ©
-        print("TouchÃ© !")
-        B[i, j] = -valeur_bateau     # Marquer la case comme jouÃ©e
-        if not (valeur_bateau in B): # VÃ©rifier si le bateau est coulÃ© pour cela on va regarder dans toute la grille s'il y a quelque part valeur_bateau
-            Nbr_bateau_coule+=1      # on incrÃ©mente le nombre de bateau coulÃ© 
+def play(grid, i, j, sunk_ships):
+    # This function marks the played cell and checks if a ship has been hit or sunk
+    ship_value = grid[i, j]
+    if ship_value != 0:
+        print("Hit!")
+        grid[i, j] = -ship_value
+        if ship_value not in grid:
+            sunk_ships += 1
             for k in range(10):
                 for l in range(10):
-                    if B[k,l]==-valeur_bateau: #on parcours toute la matrice et Ã  chaque fois qu'on a un case touchÃ©e qui a la meme valeur que moins la prÃ©cÃ©dente on la marque comme coulÃ©
-                        B[k,l]=B[k,l]*10
-            print("CoulÃ© !")
+                    if grid[k, l] == -ship_value:
+                        grid[k, l] *= 10  # Mark as sunk
+            print("Sunk!")
     else:
-        print("Ã€ l'eau.")
-        B[i, j] = 10  # Marquer l'eau
-    return Nbr_bateau_coule #permet de mettre Ã  jour le nombre de bateaux coulÃ©s dans le programme principal
+        print("Miss.")
+        grid[i, j] = 10  # Mark water
+    return sunk_ships
 
 
-def debut():   #affichage en console du dÃ©but de la partie 
+def startGame():
+    # Displays the intro message
     print("              ------------------------------------------------")
-    print("              - Bienvenue dans la Bataille Navale: version 1 -")
+    print("              - Welcome to Battleship: Version 1 -")
     print("              ------------------------------------------------\n")
-    print("\nVous allez affronter un ordinateur, les rÃ¨gles sont les suivantes:\n")
-    print("-  L'ordinateur a disposÃ© ces bateaux de faÃ§ons horizontales ou verticales sur l'ensemble de la grille")
-    print("\n Ils sont au nombre de cinq dont: ")
-    print("- 1 Porte-avion (5 cases)\n - 1 Croiseur (4 cases)\n - 1 Contre-torpilleurs (3 cases)\n - 1 Sous-marin (2 cases)\n - 1 Barque (1 case)\n \n")
-    print("Ã€ la fin de la partie, votre taux de rÃ©ussite pour toucher un bateau sera affichÃ©.")
-    print("\nVous Ãªtes maintenant prÃªt Ã   jouer, bonne chance ! \n")
+    print("\nYou will be playing against the computer. The rules are:")
+    print("- The computer has placed its ships horizontally or vertically on the grid.")
+    print("\nThere are five ships in total:")
+    print("- 1 Aircraft Carrier (5 cells)\n- 1 Cruiser (4 cells)\n- 1 Destroyer (3 cells)\n- 1 Submarine (2 cells)\n- 1 Boat (1 cell)\n")
+    print("At the end of the game, your accuracy will be shown.")
+    print("\nYou are now ready to play. Good luck!\n")
 
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
-#                                                      Programme principal
-# --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+# -----------------------------------------------------------------------------------------------------------------------------
+#                                                      Main Program
+# -----------------------------------------------------------------------------------------------------------------------------
 
+computerGrid = initializeGrid()
 
-GrilleOrdi=initialiserGrille ()
-
-for i in range(1,6):  #on place tous les bateaux de l'ordinateur dans la matrice en incrÃ©mentant la taille via une boucle 
-    placerBateaux(GrilleOrdi, i)
+# Place all 5 ships of increasing size
+for ship_size in range(1, 6):
+    placeShips(computerGrid, ship_size)
     
-    
-Nbr_bateau_coule=0
-Nbr_de_coups=0
+sunk_ships = 0
+total_moves = 0
 
-debut()
-afficherGrille(GrilleOrdi)
+startGame()
+displayGrid(computerGrid)
 
-while Nbr_bateau_coule!=5:
-    print("Dans quelle case voulez vous jouez? ")
-    i_lettre = input("Ligne : ")
-    if len(i_lettre) != 1:     # Evite les erreurs du style B7 au lieux de B puis 7
-        print("Erreur : Veuillez entrer un seul caractÃ¨re pour la ligne (entre A et J).")
-        i_lettre = input("Ligne : ")    # On suppose que l'utilisateur Ã  la deuxiÃ¨me tentative ne se trompe pas...
-    i=ord(i_lettre)-65
-    j= int(input(("Colonne : ")))-1
+while sunk_ships != 5:
+    print("Which cell do you want to play?")
+    row_letter = input("Row (A-J): ")
+    if len(row_letter) != 1:
+        print("Error: Please enter only one character for the row (A to J).")
+        row_letter = input("Row (A-J): ")  # Assuming the second attempt is correct
+    row = ord(row_letter.upper()) - 65
+    col = int(input("Column (1-10): ")) - 1
     
-    if 0 <= i < 10 and 0 <= j < 10 and dejajoue(i, j, GrilleOrdi)==False :
-        Nbr_de_coups+=1
-        Nbr_bateau_coule = jouer(GrilleOrdi, i, j,Nbr_bateau_coule)
-        afficherGrille(GrilleOrdi)
+    if 0 <= row < 10 and 0 <= col < 10 and not alreadyPlayed(row, col, computerGrid):
+        total_moves += 1
+        sunk_ships = play(computerGrid, row, col, sunk_ships)
+        displayGrid(computerGrid)
     else:
-        print("CoordonnÃ©es invalides ! Veuillez entrer des valeurs pour les lignes entre A et J et pour le colonnes entre 1 et 10.")
-     
-print("Bravo tu as enfin reussi en ",Nbr_de_coups," coups, ce qui te fais un pourcentage de rÃ©ussite de",15*100/Nbr_de_coups, "% !")
+        print("Invalid coordinates! Please enter a letter from A to J for rows and a number from 1 to 10 for columns.")
 
-if Nbr_de_coups<=50:
-    print("Impressionnant ! Tu peux relever un dÃ©fi encore plus corsÃ© avec une version supÃ©rieure.")
-    print("Affronte l'ordinateur pour dÃ©couvrir ses bateaux avant qu'il ne dÃ©truise les tiens !")
+print(f"Congratulations! You won in {total_moves} moves, giving you an accuracy of {15 * 100 / total_moves:.2f}%.")
+
+if total_moves <= 50:
+    print("Impressive! Try a harder challenge with a more advanced version.")
+    print("Face the computer to find its ships before it destroys yours!")
 else:
-    print("Pas mal, mais avec un peu plus de pratique, tu amÃ©lioreras encore ta stratÃ©gie !")
-
-
-    
-
-
-    
+    print("Not bad! With a bit more practice, you'll improve your strategy even further.")
